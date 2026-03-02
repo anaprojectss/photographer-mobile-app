@@ -30,7 +30,7 @@ public class WelcomeActivity extends AppCompatActivity {
 
         tvLoginHint.setOnClickListener(v -> {
             // privremeno vodi na MainActivity dok ne napravimo LoginActivity
-            Intent i = new Intent(this, MainActivity.class);
+            Intent i = new Intent(this, LoginActivity.class);
             i.putExtra(EXTRA_ROLE, ROLE_CLIENT); // ili bez role, kako želiš
             startActivity(i);
         });
@@ -39,7 +39,7 @@ public class WelcomeActivity extends AppCompatActivity {
     private void openNext(String role) {
         // Za sada vodi na MainActivity kao placeholder.
         // Kasnije ćemo ovde voditi na LoginActivity i proslediti role.
-        Intent i = new Intent(this, MainActivity.class);
+        Intent i = new Intent(this, RegisterActivity.class);
         i.putExtra(EXTRA_ROLE, role);
         startActivity(i);
     }
