@@ -1,0 +1,136 @@
+package com.example.photographyapp;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+public class FirebaseRest {
+
+    // Your DB base URL (no / at the end is also ok)
+    private static final String BASE_URL =
+            "https://photographer-app-c89b4-default-rtdb.europe-west1.firebasedatabase.app";
+
+    private static final OkHttpClient client = new OkHttpClient();
+    private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
+
+    public interface ResultCallback {
+        void onSuccess(String responseBody);
+        void onError(String message);
+    }
+
+    // POST /users.json  -> Firebase generates an auto ID
+    public static void createUser(String fullName, String email, String role, String password, ResultCallback cb) {
+        String url = BASE_URL + "/users.json";
+
+        JSONObject bodyJson = new JSONObject();
+        try {
+            bodyJson.put("fullName", fullName);
+            bodyJson.put("email", email);
+            bodyJson.put("role", role);
+
+            // ⚠️ Not secure for real apps. OK for a simple faculty demo.
+            bodyJson.put("password", password);
+
+        } catch (JSONException e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        RequestBody body = RequestBody.create(bodyJson.toString(), JSON);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp); // looks like: {"name":"-NxyzAutoId"}
+            }
+        });
+    }
+
+    public interface LoginCallback {
+        void onSuccess(String userId, String role);
+        void onInvalidCredentials();
+        void onError(String message);
+    }
+
+    public static void login(String email, String password, LoginCallback cb) {
+        String url = BASE_URL + "/users.json";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+
+                try {
+                    // Ako nema nijednog usera, Firebase vrati "null"
+                    if (resp == null || resp.equals("null") || resp.trim().isEmpty()) {
+                        cb.onInvalidCredentials();
+                        return;
+                    }
+
+                    JSONObject root = new JSONObject(resp);
+
+                    String emailNorm = email.trim().toLowerCase();
+                    String passNorm = password.trim();
+
+                    // root = { "autoId1": {...}, "autoId2": {...} }
+                    java.util.Iterator<String> keys = root.keys();
+                    while (keys.hasNext()) {
+                        String userId = keys.next();
+                        JSONObject user = root.optJSONObject(userId);
+                        if (user == null) continue;
+
+                        String dbEmail = user.optString("email", "").trim().toLowerCase();
+                        String dbPass  = user.optString("password", "").trim();
+
+                        if (emailNorm.equals(dbEmail) && passNorm.equals(dbPass)) {
+                            String role = user.optString("role", "client");
+                            cb.onSuccess(userId, role);
+                            return;
+                        }
+                    }
+
+                    cb.onInvalidCredentials();
+
+                } catch (Exception e) {
+                    cb.onError("Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
+}

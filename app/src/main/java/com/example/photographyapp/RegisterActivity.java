@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.button.MaterialButton;
@@ -54,11 +53,30 @@ public class RegisterActivity extends AppCompatActivity {
                 return;
             }
 
-            // Privremeno: samo prebacimo na MainActivity
-            // Kasnije ovde radimo REST poziv ka Firebase Realtime DB
-            Intent i = new Intent(this, MainActivity.class);
-            i.putExtra(WelcomeActivity.EXTRA_ROLE, role);
-            startActivity(i);
+            btnRegister.setEnabled(false);
+
+            FirebaseRest.createUser(name, email, role, pass, new FirebaseRest.ResultCallback() {
+                @Override
+                public void onSuccess(String responseBody) {
+                    runOnUiThread(() -> {
+                        btnRegister.setEnabled(true);
+                        Toast.makeText(RegisterActivity.this, "Registration successful!", Toast.LENGTH_SHORT).show();
+
+                        Intent i = new Intent(RegisterActivity.this, LoginActivity.class);
+                        i.putExtra(WelcomeActivity.EXTRA_ROLE, role);
+                        startActivity(i);
+                        finish();
+                    });
+                }
+
+                @Override
+                public void onError(String message) {
+                    runOnUiThread(() -> {
+                        btnRegister.setEnabled(true);
+                        Toast.makeText(RegisterActivity.this, message, Toast.LENGTH_LONG).show();
+                    });
+                }
+            });
         });
 
         tvLogin.setOnClickListener(v -> {
@@ -66,4 +84,7 @@ public class RegisterActivity extends AppCompatActivity {
             finish();
         });
     }
+
+
 }
+
