@@ -48,7 +48,14 @@ public class LoginActivity extends AppCompatActivity {
                         btnLogin.setEnabled(true);
                         Toast.makeText(LoginActivity.this, "Login successful!", Toast.LENGTH_SHORT).show();
 
-                        Intent i = new Intent(LoginActivity.this, MainActivity.class);
+                        Intent i;
+
+                        if (role.equals(WelcomeActivity.ROLE_ADMIN)) {
+                            i = new Intent(LoginActivity.this, AdminActivity.class);
+                        } else {
+                            i = new Intent(LoginActivity.this, MainActivity.class);
+                        }
+
                         i.putExtra("userId", userId);
                         i.putExtra(WelcomeActivity.EXTRA_ROLE, role);
                         startActivity(i);

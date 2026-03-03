@@ -133,4 +133,85 @@ public class FirebaseRest {
             }
         });
     }
+
+    public interface UserCallback {
+        void onSuccess(String fullName, String studioName, String bio, String avatarUrl);
+        void onError(String message);
+    }
+
+    public static void getUser(String userId, UserCallback cb) {
+        String url = BASE_URL + "/users/" + userId + ".json";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code());
+                    return;
+                }
+
+                try {
+                    JSONObject user = new JSONObject(resp);
+
+                    String fullName = user.optString("fullName", "Photographer");
+                    String studio = user.optString("studioName", "Studio");
+                    String bio = user.optString("bio", "");
+                    String avatarUrl = user.optString("avatarUrl", "");
+
+                    cb.onSuccess(fullName, studio, bio, avatarUrl);
+
+                } catch (Exception e) {
+                    cb.onError("Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    public static void updateProfile(String userId, String fullName, String studioName, String avatarUrl, ResultCallback cb) {
+        String url = BASE_URL + "/users/" + userId + ".json";
+
+        JSONObject bodyJson = new JSONObject();
+        try {
+            bodyJson.put("fullName", fullName);
+            bodyJson.put("studioName", studioName);
+            bodyJson.put("avatarUrl", avatarUrl);
+        } catch (Exception e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        RequestBody body = RequestBody.create(bodyJson.toString(), JSON);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .patch(body)   // PATCH = update fields
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
 }
