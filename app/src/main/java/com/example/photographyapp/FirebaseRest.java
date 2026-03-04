@@ -340,4 +340,38 @@ public class FirebaseRest {
             }
         });
     }
+
+    public static void updatePhotoTitle(String photoId, String newTitle, ResultCallback cb) {
+        String url = BASE_URL + "/photos/" + photoId + ".json";
+
+        JSONObject bodyJson = new JSONObject();
+        try {
+            bodyJson.put("title", newTitle);
+        } catch (Exception e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        RequestBody body = RequestBody.create(bodyJson.toString(), JSON);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .patch(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
 }

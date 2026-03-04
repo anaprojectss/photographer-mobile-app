@@ -24,10 +24,12 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.VH> {
     private final List<Photo> items = new ArrayList<>();
     private final OnDeleteClick onDeleteClick;
 
-    public PhotoAdapter(OnDeleteClick onDeleteClick) {
-        this.onDeleteClick = onDeleteClick;
-    }
+    private final OnItemClick onItemClick;
 
+    public PhotoAdapter(OnDeleteClick onDeleteClick, OnItemClick onItemClick) {
+        this.onDeleteClick = onDeleteClick;
+        this.onItemClick = onItemClick;
+    }
     public void setItems(List<Photo> photos) {
         items.clear();
         if (photos != null) items.addAll(photos);
@@ -55,6 +57,10 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.VH> {
         h.btnDelete.setOnClickListener(v -> {
             if (onDeleteClick != null) onDeleteClick.onDelete(p);
         });
+
+        h.itemView.setOnClickListener(v -> {
+            if (onItemClick != null) onItemClick.onClick(p);
+        });
     }
 
     @Override
@@ -74,4 +80,10 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.VH> {
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
+
+    public interface OnItemClick {
+        void onClick(Photo photo);
+    }
+
+
 }

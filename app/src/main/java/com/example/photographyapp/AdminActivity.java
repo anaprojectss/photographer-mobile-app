@@ -1,5 +1,6 @@
 package com.example.photographyapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -183,19 +184,31 @@ public class AdminActivity extends AppCompatActivity {
         rvPhotos.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 2));
 
         if (photoAdapter == null) {
-            photoAdapter = new PhotoAdapter(photo -> {
-                FirebaseRest.deletePhoto(photo.id, new FirebaseRest.ResultCallback() {
-                    @Override public void onSuccess(String responseBody) {
-                        runOnUiThread(() -> {
-                            Toast.makeText(AdminActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
-                            loadPhotos(); // refresh
+            photoAdapter = new PhotoAdapter(
+                    // DELETE klik
+                    photo -> {
+                        FirebaseRest.deletePhoto(photo.id, new FirebaseRest.ResultCallback() {
+                            @Override public void onSuccess(String responseBody) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(AdminActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                                    loadPhotos();
+                                });
+                            }
+                            @Override public void onError(String message) {
+                                runOnUiThread(() -> Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show());
+                            }
                         });
+                    },
+
+                    // ITEM klik (uvećana slika + edit title)
+                    photo -> {
+                        Intent i = new Intent(AdminActivity.this, PhotoDetailActivity.class);
+                        i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_ID, photo.id);
+                        i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_URL, photo.url);
+                        i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_TITLE, photo.title);
+                        startActivity(i);
                     }
-                    @Override public void onError(String message) {
-                        runOnUiThread(() -> Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show());
-                    }
-                });
-            });
+            );
         }
 
         rvPhotos.setAdapter(photoAdapter);
@@ -273,6 +286,12 @@ public class AdminActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show());
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (photoAdapter != null) loadPhotos();
     }
 
 
