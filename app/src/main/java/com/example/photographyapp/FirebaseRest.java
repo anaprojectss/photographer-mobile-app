@@ -4,9 +4,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -197,6 +201,128 @@ public class FirebaseRest {
         Request request = new Request.Builder()
                 .url(url)
                 .patch(body)   // PATCH = update fields
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
+
+    public static void createPhoto(String photographerId, String url, String title, ResultCallback cb) {
+        String endpoint = BASE_URL + "/photos.json";
+
+        JSONObject bodyJson = new JSONObject();
+        try {
+            bodyJson.put("photographerId", photographerId);
+            bodyJson.put("url", url);
+            bodyJson.put("title", title);
+            bodyJson.put("createdAt", System.currentTimeMillis());
+        } catch (JSONException e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        RequestBody body = RequestBody.create(bodyJson.toString(), JSON);
+
+        Request request = new Request.Builder()
+                .url(endpoint)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp); // {"name":"-NphotoAutoId"}
+            }
+        });
+    }
+
+    public static void getPhotos(String photographerId, PhotoListCallback cb) {
+        HttpUrl url = HttpUrl.parse(BASE_URL + "/photos.json")
+                .newBuilder()
+                // Firebase expects quotes in these values:
+                .addQueryParameter("orderBy", "\"photographerId\"")
+                .addQueryParameter("equalTo", "\"" + photographerId + "\"")
+                .build();
+
+        Request request = new Request.Builder().url(url).get().build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+
+                try {
+                    // Firebase returns "null" if no results
+                    if (resp == null || resp.equals("null")) {
+                        cb.onSuccess(new ArrayList<>());
+                        return;
+                    }
+
+                    JSONObject data = new JSONObject(resp);
+                    ArrayList<Photo> photos = new ArrayList<>();
+
+                    Iterator<String> keys = data.keys();
+                    while (keys.hasNext()) {
+                        String id = keys.next();
+                        JSONObject p = data.optJSONObject(id);
+                        if (p == null) continue;
+
+                        photos.add(new Photo(
+                                id,
+                                p.optString("title", ""),
+                                p.optString("url", ""),
+                                p.optString("photographerId", "")
+                        ));
+                    }
+
+                    cb.onSuccess(photos);
+                } catch (Exception e) {
+                    cb.onError("Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    public interface PhotoListCallback {
+        void onSuccess(List<Photo> photos);
+        void onError(String message);
+    }
+
+    public static void deletePhoto(String photoId, ResultCallback cb) {
+        String url = BASE_URL + "/photos/" + photoId + ".json";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .delete()
                 .build();
 
         client.newCall(request).enqueue(new Callback() {

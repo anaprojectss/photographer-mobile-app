@@ -8,15 +8,22 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.tabs.TabLayout;
 
+import java.util.List;
+
 public class AdminActivity extends AppCompatActivity {
 
     private TabLayout tabLayout;
+
+    private androidx.recyclerview.widget.RecyclerView rvPhotos;
+    private PhotoAdapter photoAdapter;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,7 +35,7 @@ public class AdminActivity extends AppCompatActivity {
         TextView tvBio = findViewById(R.id.tvBio);
         ImageView imgAvatar = findViewById(R.id.imgAvatar);
 
-        String userId = getIntent().getStringExtra("userId");
+        userId = getIntent().getStringExtra("userId");
 
         if (userId != null) {
             FirebaseRest.getUser(userId, new FirebaseRest.UserCallback() {
@@ -64,15 +71,22 @@ public class AdminActivity extends AppCompatActivity {
         tabLayout.addTab(tabLayout.newTab().setText("Photos"));
         tabLayout.addTab(tabLayout.newTab().setText("Bookings"));
 
-        // default content
-        showPlaceholder("Photos will be shown here (grid).");
+        FloatingActionButton fabAddPhoto = findViewById(R.id.fabAddPhoto);
+
+        fabAddPhoto.setOnClickListener(v -> openAddPhotoDialog());
+
+        // Initial state: Photos tab is default
+        showPhotosView();
+        fabAddPhoto.setVisibility(View.VISIBLE);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override public void onTabSelected(TabLayout.Tab tab) {
-                if (tab.getPosition() == 0) {
-                    showPlaceholder("Photos will be shown here (grid).");
-                } else {
+                if (tab.getPosition() == 0) { // Photos
+                    showPhotosView();
+                    fabAddPhoto.setVisibility(View.VISIBLE);
+                } else { // Bookings
                     showPlaceholder("Bookings will be shown here (list).");
+                    fabAddPhoto.setVisibility(View.GONE);
                 }
             }
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
@@ -102,12 +116,14 @@ public class AdminActivity extends AppCompatActivity {
             }
         });
 
+        String finalUserId = userId;
+
 // 2) Cancel
         btnCancel.setOnClickListener(v -> cardEdit.setVisibility(View.GONE));
 
 // 3) Save -> PATCH u bazu -> update UI
         btnSave.setOnClickListener(v -> {
-            if (userId == null) {
+            if (finalUserId == null) {
                 Toast.makeText(this, "Missing userId", Toast.LENGTH_LONG).show();
                 return;
             }
@@ -123,7 +139,7 @@ public class AdminActivity extends AppCompatActivity {
 
             btnSave.setEnabled(false);
 
-            FirebaseRest.updateProfile(userId, newName, newStudio, newAvatarUrl, new FirebaseRest.ResultCallback() {
+            FirebaseRest.updateProfile(finalUserId, newName, newStudio, newAvatarUrl, new FirebaseRest.ResultCallback() {
                 @Override
                 public void onSuccess(String responseBody) {
                     runOnUiThread(() -> {
@@ -153,6 +169,37 @@ public class AdminActivity extends AppCompatActivity {
                 }
             });
         });
+
+    }
+
+    private void showPhotosView() {
+        android.widget.FrameLayout container = findViewById(R.id.contentContainer);
+        container.removeAllViews();
+
+        View v = getLayoutInflater().inflate(R.layout.view_admin_photos, container, false);
+        container.addView(v);
+
+        rvPhotos = v.findViewById(R.id.rvPhotos);
+        rvPhotos.setLayoutManager(new androidx.recyclerview.widget.GridLayoutManager(this, 2));
+
+        if (photoAdapter == null) {
+            photoAdapter = new PhotoAdapter(photo -> {
+                FirebaseRest.deletePhoto(photo.id, new FirebaseRest.ResultCallback() {
+                    @Override public void onSuccess(String responseBody) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(AdminActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
+                            loadPhotos(); // refresh
+                        });
+                    }
+                    @Override public void onError(String message) {
+                        runOnUiThread(() -> Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show());
+                    }
+                });
+            });
+        }
+
+        rvPhotos.setAdapter(photoAdapter);
+        loadPhotos();
     }
 
     private void showPlaceholder(String text) {
@@ -164,4 +211,69 @@ public class AdminActivity extends AppCompatActivity {
         ((android.widget.FrameLayout) findViewById(R.id.contentContainer)).removeAllViews();
         ((android.widget.FrameLayout) findViewById(R.id.contentContainer)).addView(tv);
     }
+
+    private void openAddPhotoDialog() {
+
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        View view = getLayoutInflater().inflate(R.layout.dialog_add_photo, null);
+
+        com.google.android.material.textfield.TextInputEditText etUrl = view.findViewById(R.id.etPhotoUrl);
+        com.google.android.material.textfield.TextInputEditText etTitle = view.findViewById(R.id.etPhotoTitle);
+
+        builder.setView(view)
+                .setTitle("Add Photo")
+                .setPositiveButton("Save", (dialog, which) -> {
+
+                    String url = String.valueOf(etUrl.getText()).trim();
+                    String title = String.valueOf(etTitle.getText()).trim();
+
+                    if (!url.isEmpty()) {
+                        savePhoto(url, title);
+                    }
+
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void savePhoto(String url, String title) {
+
+        String userId = getIntent().getStringExtra("userId");
+
+        FirebaseRest.createPhoto(userId, url, title, new FirebaseRest.ResultCallback() {
+
+            @Override
+            public void onSuccess(String responseBody) {
+                runOnUiThread(() ->
+                        Toast.makeText(AdminActivity.this, "Photo added!", Toast.LENGTH_SHORT).show()
+                );
+                loadPhotos();
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() ->
+                        Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show()
+                );
+            }
+        });
+    }
+
+    private void loadPhotos() {
+        if (userId == null) return;
+
+        FirebaseRest.getPhotos(userId, new FirebaseRest.PhotoListCallback() {
+            @Override public void onSuccess(java.util.List<Photo> photos) {
+                runOnUiThread(() -> {
+                    if (photoAdapter != null) photoAdapter.setItems(photos);
+                });
+            }
+
+            @Override public void onError(String message) {
+                runOnUiThread(() -> Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
+
 }
