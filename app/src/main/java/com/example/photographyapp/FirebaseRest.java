@@ -183,6 +183,49 @@ public class FirebaseRest {
         });
     }
 
+    public interface UserBasicCallback {
+        void onSuccess(String fullName, String email);
+        void onError(String message);
+    }
+
+    public static void getUserBasic(String userId, UserBasicCallback cb) {
+        String url = BASE_URL + "/users/" + userId + ".json";
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code());
+                    return;
+                }
+
+                try {
+                    JSONObject user = new JSONObject(resp);
+
+                    String fullName = user.optString("fullName", "Client");
+                    String email = user.optString("email", "");
+
+                    cb.onSuccess(fullName, email);
+
+                } catch (Exception e) {
+                    cb.onError("Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     public static void updateProfile(String userId, String fullName, String studioName, String avatarUrl, ResultCallback cb) {
         String url = BASE_URL + "/users/" + userId + ".json";
 
