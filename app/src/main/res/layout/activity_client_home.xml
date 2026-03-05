@@ -116,31 +116,11 @@
 
         <!-- PHOTOGRAPHERS LIST -->
 
-        <LinearLayout
-            android:id="@+id/layoutPhotographers"
-            android:orientation="vertical"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvPhotographers"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:text="AM Studio"
-                android:padding="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <TextView
-                android:text="Sunset Weddings"
-                android:padding="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-            <TextView
-                android:text="Portrait Pro"
-                android:padding="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"/>
 
     </LinearLayout>
 

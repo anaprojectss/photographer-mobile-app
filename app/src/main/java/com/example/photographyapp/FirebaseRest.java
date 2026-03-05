@@ -417,4 +417,60 @@ public class FirebaseRest {
             }
         });
     }
+
+    public interface PhotographersCallback {
+        void onSuccess(List<Photographer> photographers);
+        void onError(String message);
+    }
+
+    public static void getPhotographers(PhotographersCallback cb) {
+        String url = BASE_URL + "/users.json";
+
+        Request request = new Request.Builder().url(url).get().build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+
+                try {
+                    if (resp == null || resp.equals("null")) {
+                        cb.onSuccess(new ArrayList<>());
+                        return;
+                    }
+
+                    JSONObject data = new JSONObject(resp);
+                    ArrayList<Photographer> list = new ArrayList<>();
+
+                    Iterator<String> keys = data.keys();
+                    while (keys.hasNext()) {
+                        String id = keys.next();
+                        JSONObject u = data.optJSONObject(id);
+                        if (u == null) continue;
+
+                        String role = u.optString("role", "");
+                        if (!"admin".equals(role)) continue;
+
+                        String fullName = u.optString("fullName", "");
+                        String studioName = u.optString("studioName", "");
+                        String avatarUrl = u.optString("avatarUrl", "");
+
+                        list.add(new Photographer(id, fullName, studioName, avatarUrl));
+                    }
+
+                    cb.onSuccess(list);
+
+                } catch (Exception e) {
+                    cb.onError("Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
 }

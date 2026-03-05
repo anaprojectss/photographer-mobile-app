@@ -62,13 +62,6 @@ public class ClientHomeActivity extends AppCompatActivity {
         // Dummy photographers (kasnije ćemo povući iz /users gde role=admin)
         List<String> demo = Arrays.asList("AM Studio", "Sunset Weddings", "Portrait Pro");
 
-        SimpleStringAdapter adapter = new SimpleStringAdapter(demo, item -> {
-            Toast.makeText(this, "Clicked: " + item, Toast.LENGTH_SHORT).show();
-
-            // Kasnije: otvori PhotographerProfileActivity i prosledi photographerId
-            // Intent i = new Intent(this, PhotographerProfileActivity.class);
-            // startActivity(i);
-        });
 
 //        rv.setAdapter(adapter);
 
@@ -128,6 +121,27 @@ public class ClientHomeActivity extends AppCompatActivity {
                 }
             });
 
+        });
+
+        RecyclerView rv = findViewById(R.id.rvPhotographers);
+        rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+
+        PhotographerAdapter adapter = new PhotographerAdapter(p -> {
+            Toast.makeText(this, "Selected: " + p.studioName, Toast.LENGTH_SHORT).show();
+            // Sledeće: otvori PhotographerProfileActivity i prosledi p.id
+        });
+        rv.setAdapter(adapter);
+
+        FirebaseRest.getPhotographers(new FirebaseRest.PhotographersCallback() {
+            @Override
+            public void onSuccess(List<Photographer> photographers) {
+                runOnUiThread(() -> adapter.setItems(photographers));
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() -> Toast.makeText(ClientHomeActivity.this, message, Toast.LENGTH_LONG).show());
+            }
         });
     }
 }
