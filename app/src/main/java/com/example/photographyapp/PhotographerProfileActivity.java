@@ -1,5 +1,6 @@
 package com.example.photographyapp;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -38,9 +39,24 @@ public class PhotographerProfileActivity extends AppCompatActivity {
         rvPhotos.setLayoutManager(new GridLayoutManager(this, 2));
 
         photoAdapter = new PhotoAdapter(
-                photo -> {},
-                photo -> {}
+                // delete callback - klijent ne briše, ostaje prazno
+                photo -> {
+                },
+
+                // click callback - otvara uvećanu sliku
+                photo -> {
+                    Intent i = new Intent(
+                            PhotographerProfileActivity.this,
+                            PhotoDetailActivity.class
+                    );
+                    i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_ID, photo.id);
+                    i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_URL, photo.url);
+                    i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_TITLE, photo.title);
+                    i.putExtra(PhotoDetailActivity.EXTRA_READ_ONLY, true);
+                    startActivity(i);
+                }
         );
+
         rvPhotos.setAdapter(photoAdapter);
 
         if (photographerId != null) {
