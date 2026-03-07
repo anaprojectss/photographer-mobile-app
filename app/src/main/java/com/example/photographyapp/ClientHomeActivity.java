@@ -127,8 +127,9 @@ public class ClientHomeActivity extends AppCompatActivity {
         rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
 
         PhotographerAdapter adapter = new PhotographerAdapter(p -> {
-            Toast.makeText(this, "Selected: " + p.studioName, Toast.LENGTH_SHORT).show();
-            // Sledeće: otvori PhotographerProfileActivity i prosledi p.id
+            android.content.Intent i = new android.content.Intent(this, PhotographerProfileActivity.class);
+            i.putExtra(PhotographerProfileActivity.EXTRA_PHOTOGRAPHER_ID, p.id);
+            startActivity(i);
         });
         rv.setAdapter(adapter);
 

@@ -14,6 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PhotographyApp">
         <activity
+            android:name=".PhotographerProfileActivity"
+            android:exported="false" />
+        <activity
             android:name=".ClientHomeActivity"
             android:exported="false" />
         <activity
