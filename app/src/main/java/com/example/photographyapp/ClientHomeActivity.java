@@ -150,7 +150,16 @@ public class ClientHomeActivity extends AppCompatActivity {
         RecyclerView rvBookings = findViewById(R.id.rvBookings);
         rvBookings.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
 
-        BookingAdapter bookingAdapter = new BookingAdapter();
+        BookingAdapter bookingAdapter = new BookingAdapter(booking -> {
+            Intent i = new Intent(ClientHomeActivity.this, BookingDetailActivity.class);
+            i.putExtra(BookingDetailActivity.EXTRA_PHOTOGRAPHER_ID, booking.photographerId);
+            i.putExtra(BookingDetailActivity.EXTRA_DATE, booking.date);
+            i.putExtra(BookingDetailActivity.EXTRA_LOCATION, booking.location);
+            i.putExtra(BookingDetailActivity.EXTRA_TYPE, booking.shootType);
+            i.putExtra(BookingDetailActivity.EXTRA_HOURS, booking.hours);
+            i.putExtra(BookingDetailActivity.EXTRA_STATUS, booking.status);
+            startActivity(i);
+        });
         rvBookings.setAdapter(bookingAdapter);
 
         if (userId != null) {

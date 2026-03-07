@@ -13,7 +13,16 @@ import java.util.List;
 
 public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.VH> {
 
+    public interface OnBookingClick {
+        void onClick(Booking booking);
+    }
+
     private final List<Booking> items = new ArrayList<>();
+    private final OnBookingClick onBookingClick;
+
+    public BookingAdapter(OnBookingClick onBookingClick) {
+        this.onBookingClick = onBookingClick;
+    }
 
     public void setItems(List<Booking> bookings) {
         items.clear();
@@ -35,6 +44,10 @@ public class BookingAdapter extends RecyclerView.Adapter<BookingAdapter.VH> {
         h.tvDate.setText(b.date);
         h.tvDetails.setText(b.location + " • " + b.shootType + " • " + b.hours + "h");
         h.tvStatus.setText("Status: " + b.status);
+
+        h.itemView.setOnClickListener(v -> {
+            if (onBookingClick != null) onBookingClick.onClick(b);
+        });
     }
 
     @Override
