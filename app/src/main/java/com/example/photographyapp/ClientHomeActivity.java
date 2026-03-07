@@ -124,15 +124,32 @@ public class ClientHomeActivity extends AppCompatActivity {
         });
 
         RecyclerView rv = findViewById(R.id.rvPhotographers);
-        rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+        rv.setLayoutManager(new LinearLayoutManager(this));
 
         PhotographerAdapter adapter = new PhotographerAdapter(p -> {
-            android.content.Intent i = new android.content.Intent(this, PhotographerProfileActivity.class);
+            Intent i = new Intent(this, PhotographerProfileActivity.class);
             i.putExtra(PhotographerProfileActivity.EXTRA_PHOTOGRAPHER_ID, p.id);
             i.putExtra("userId", userId);
             startActivity(i);
         });
+
         rv.setAdapter(adapter);
+
+        TextInputEditText etSearch = findViewById(R.id.etSearch);
+        etSearch.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                adapter.filter(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(android.text.Editable s) {
+            }
+        });
 
         FirebaseRest.getPhotographers(new FirebaseRest.PhotographersCallback() {
             @Override
@@ -142,7 +159,9 @@ public class ClientHomeActivity extends AppCompatActivity {
 
             @Override
             public void onError(String message) {
-                runOnUiThread(() -> Toast.makeText(ClientHomeActivity.this, message, Toast.LENGTH_LONG).show());
+                runOnUiThread(() ->
+                        Toast.makeText(ClientHomeActivity.this, message, Toast.LENGTH_LONG).show()
+                );
             }
         });
 
