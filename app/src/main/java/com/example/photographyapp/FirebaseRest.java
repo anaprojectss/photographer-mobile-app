@@ -473,4 +473,54 @@ public class FirebaseRest {
             }
         });
     }
+
+    public static void createBooking(String clientId,
+                                     String photographerId,
+                                     String date,
+                                     String location,
+                                     String shootType,
+                                     String hours,
+                                     ResultCallback cb) {
+
+        String endpoint = BASE_URL + "/bookings.json";
+
+        JSONObject bodyJson = new JSONObject();
+        try {
+            bodyJson.put("clientId", clientId);
+            bodyJson.put("photographerId", photographerId);
+            bodyJson.put("date", date);
+            bodyJson.put("location", location);
+            bodyJson.put("shootType", shootType);
+            bodyJson.put("hours", hours);
+            bodyJson.put("status", "pending");
+            bodyJson.put("createdAt", System.currentTimeMillis());
+        } catch (JSONException e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        RequestBody body = RequestBody.create(bodyJson.toString(), JSON);
+
+        Request request = new Request.Builder()
+                .url(endpoint)
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
 }

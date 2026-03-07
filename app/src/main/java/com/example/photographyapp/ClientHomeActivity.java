@@ -129,6 +129,7 @@ public class ClientHomeActivity extends AppCompatActivity {
         PhotographerAdapter adapter = new PhotographerAdapter(p -> {
             android.content.Intent i = new android.content.Intent(this, PhotographerProfileActivity.class);
             i.putExtra(PhotographerProfileActivity.EXTRA_PHOTOGRAPHER_ID, p.id);
+            i.putExtra("userId", userId);
             startActivity(i);
         });
         rv.setAdapter(adapter);

@@ -20,6 +20,7 @@ public class PhotographerProfileActivity extends AppCompatActivity {
     public static final String EXTRA_PHOTOGRAPHER_ID = "photographerId";
 
     private String photographerId;
+    private String clientId;
     private PhotoAdapter photoAdapter;
 
     @Override
@@ -35,6 +36,8 @@ public class PhotographerProfileActivity extends AppCompatActivity {
         RecyclerView rvPhotos = findViewById(R.id.rvPhotos);
 
         photographerId = getIntent().getStringExtra(EXTRA_PHOTOGRAPHER_ID);
+
+        clientId = getIntent().getStringExtra("userId");
 
         rvPhotos.setLayoutManager(new GridLayoutManager(this, 2));
 
@@ -105,8 +108,69 @@ public class PhotographerProfileActivity extends AppCompatActivity {
             });
         }
 
-        btnReserve.setOnClickListener(v -> {
-            Toast.makeText(this, "Reservation screen coming next", Toast.LENGTH_SHORT).show();
-        });
+        btnReserve.setOnClickListener(v -> openReserveDialog());
+    }
+
+    private void openReserveDialog() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        android.view.View view = getLayoutInflater().inflate(R.layout.dialog_reserve_date, null);
+
+        com.google.android.material.textfield.TextInputEditText etDate =
+                view.findViewById(R.id.etBookingDate);
+        com.google.android.material.textfield.TextInputEditText etLocation =
+                view.findViewById(R.id.etBookingLocation);
+        com.google.android.material.textfield.TextInputEditText etType =
+                view.findViewById(R.id.etBookingType);
+        com.google.android.material.textfield.TextInputEditText etHours =
+                view.findViewById(R.id.etBookingHours);
+
+        builder.setView(view)
+                .setTitle("Reserve date")
+                .setPositiveButton("Send request", (dialog, which) -> {
+                    String date = String.valueOf(etDate.getText()).trim();
+                    String location = String.valueOf(etLocation.getText()).trim();
+                    String type = String.valueOf(etType.getText()).trim();
+                    String hours = String.valueOf(etHours.getText()).trim();
+
+                    if (date.isEmpty() || location.isEmpty() || type.isEmpty() || hours.isEmpty()) {
+                        Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    if (clientId == null || photographerId == null) {
+                        Toast.makeText(this, "Missing user data", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+
+                    FirebaseRest.createBooking(
+                            clientId,
+                            photographerId,
+                            date,
+                            location,
+                            type,
+                            hours,
+                            new FirebaseRest.ResultCallback() {
+                                @Override
+                                public void onSuccess(String responseBody) {
+                                    runOnUiThread(() ->
+                                            Toast.makeText(PhotographerProfileActivity.this,
+                                                    "Booking request sent!",
+                                                    Toast.LENGTH_SHORT).show()
+                                    );
+                                }
+
+                                @Override
+                                public void onError(String message) {
+                                    runOnUiThread(() ->
+                                            Toast.makeText(PhotographerProfileActivity.this,
+                                                    message,
+                                                    Toast.LENGTH_LONG).show()
+                                    );
+                                }
+                            }
+                    );
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }
