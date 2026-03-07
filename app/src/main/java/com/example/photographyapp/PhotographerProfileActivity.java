@@ -39,11 +39,11 @@ public class PhotographerProfileActivity extends AppCompatActivity {
         rvPhotos.setLayoutManager(new GridLayoutManager(this, 2));
 
         photoAdapter = new PhotoAdapter(
-                // delete callback - klijent ne briše, ostaje prazno
+                // delete callback - klijent ne briše
                 photo -> {
                 },
 
-                // click callback - otvara uvećanu sliku
+                // klik na fotografiju -> uvećana slika
                 photo -> {
                     Intent i = new Intent(
                             PhotographerProfileActivity.this,
@@ -54,7 +54,10 @@ public class PhotographerProfileActivity extends AppCompatActivity {
                     i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_TITLE, photo.title);
                     i.putExtra(PhotoDetailActivity.EXTRA_READ_ONLY, true);
                     startActivity(i);
-                }
+                },
+
+                // klijent ne vidi delete dugme
+                false
         );
 
         rvPhotos.setAdapter(photoAdapter);

@@ -21,18 +21,26 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.VH> {
         void onDelete(Photo photo);
     }
 
+    public interface OnItemClick {
+        void onClick(Photo photo);
+    }
+
     private final List<Photo> items = new ArrayList<>();
     private final OnDeleteClick onDeleteClick;
-
     private final OnItemClick onItemClick;
+    private final boolean showDeleteButton;
 
-    public PhotoAdapter(OnDeleteClick onDeleteClick, OnItemClick onItemClick) {
+    public PhotoAdapter(OnDeleteClick onDeleteClick, OnItemClick onItemClick, boolean showDeleteButton) {
         this.onDeleteClick = onDeleteClick;
         this.onItemClick = onItemClick;
+        this.showDeleteButton = showDeleteButton;
     }
+
     public void setItems(List<Photo> photos) {
         items.clear();
-        if (photos != null) items.addAll(photos);
+        if (photos != null) {
+            items.addAll(photos);
+        }
         notifyDataSetChanged();
     }
 
@@ -54,12 +62,22 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.VH> {
                 .centerCrop()
                 .into(h.imgPhoto);
 
-        h.btnDelete.setOnClickListener(v -> {
-            if (onDeleteClick != null) onDeleteClick.onDelete(p);
-        });
+        if (showDeleteButton) {
+            h.btnDelete.setVisibility(View.VISIBLE);
+            h.btnDelete.setOnClickListener(v -> {
+                if (onDeleteClick != null) {
+                    onDeleteClick.onDelete(p);
+                }
+            });
+        } else {
+            h.btnDelete.setVisibility(View.GONE);
+            h.btnDelete.setOnClickListener(null);
+        }
 
         h.itemView.setOnClickListener(v -> {
-            if (onItemClick != null) onItemClick.onClick(p);
+            if (onItemClick != null) {
+                onItemClick.onClick(p);
+            }
         });
     }
 
@@ -80,10 +98,4 @@ public class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.VH> {
             btnDelete = itemView.findViewById(R.id.btnDelete);
         }
     }
-
-    public interface OnItemClick {
-        void onClick(Photo photo);
-    }
-
-
 }

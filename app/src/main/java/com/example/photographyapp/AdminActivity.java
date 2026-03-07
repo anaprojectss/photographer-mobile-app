@@ -188,14 +188,19 @@ public class AdminActivity extends AppCompatActivity {
                     // DELETE klik
                     photo -> {
                         FirebaseRest.deletePhoto(photo.id, new FirebaseRest.ResultCallback() {
-                            @Override public void onSuccess(String responseBody) {
+                            @Override
+                            public void onSuccess(String responseBody) {
                                 runOnUiThread(() -> {
                                     Toast.makeText(AdminActivity.this, "Deleted", Toast.LENGTH_SHORT).show();
                                     loadPhotos();
                                 });
                             }
-                            @Override public void onError(String message) {
-                                runOnUiThread(() -> Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show());
+
+                            @Override
+                            public void onError(String message) {
+                                runOnUiThread(() ->
+                                        Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show()
+                                );
                             }
                         });
                     },
@@ -207,7 +212,10 @@ public class AdminActivity extends AppCompatActivity {
                         i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_URL, photo.url);
                         i.putExtra(PhotoDetailActivity.EXTRA_PHOTO_TITLE, photo.title);
                         startActivity(i);
-                    }
+                    },
+
+                    // admin vidi delete dugme
+                    true
             );
         }
 
