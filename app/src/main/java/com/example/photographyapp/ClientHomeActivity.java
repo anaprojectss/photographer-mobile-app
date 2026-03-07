@@ -145,5 +145,28 @@ public class ClientHomeActivity extends AppCompatActivity {
                 runOnUiThread(() -> Toast.makeText(ClientHomeActivity.this, message, Toast.LENGTH_LONG).show());
             }
         });
+
+
+        RecyclerView rvBookings = findViewById(R.id.rvBookings);
+        rvBookings.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+
+        BookingAdapter bookingAdapter = new BookingAdapter();
+        rvBookings.setAdapter(bookingAdapter);
+
+        if (userId != null) {
+            FirebaseRest.getBookingsForClient(userId, new FirebaseRest.BookingListCallback() {
+                @Override
+                public void onSuccess(java.util.List<Booking> bookings) {
+                    runOnUiThread(() -> bookingAdapter.setItems(bookings));
+                }
+
+                @Override
+                public void onError(String message) {
+                    runOnUiThread(() ->
+                            Toast.makeText(ClientHomeActivity.this, message, Toast.LENGTH_LONG).show()
+                    );
+                }
+            });
+        }
     }
 }

@@ -11,8 +11,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-        <!-- CLIENT PROFILE CARD -->
-
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -27,32 +25,28 @@
 
                 <TextView
                     android:id="@+id/tvClientName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Client"
                     android:textStyle="bold"
-                    android:textSize="18sp"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/tvClientEmail"
-                    android:text="Loaded from DB later"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"/>
+                    android:text="Loaded from DB later"
+                    android:layout_marginTop="4dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnEditName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Edit name"
-                    android:layout_marginTop="8dp"/>
+                    android:layout_marginTop="8dp" />
 
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
-
-
-        <!-- EDIT NAME CARD -->
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardEditClient"
@@ -70,57 +64,63 @@
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/etEditClientName"
-                    android:hint="Full name"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content"
+                    android:hint="Full name" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSaveClient"
-                    android:text="Save"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"/>
+                    android:text="Save"
+                    android:layout_marginTop="12dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnCancelClient"
-                    android:text="Cancel"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"/>
+                    android:text="Cancel"
+                    android:layout_marginTop="8dp" />
 
             </LinearLayout>
-
         </com.google.android.material.card.MaterialCardView>
-
-
-        <!-- SEARCH -->
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/etSearch"
-            android:hint="Search photographers (name/studio)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-
-        <!-- PHOTOGRAPHERS TITLE -->
+            android:hint="Search photographers (name/studio)"
+            android:layout_marginBottom="16dp" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:text="Photographers"
             android:textStyle="bold"
             android:textSize="16sp"
-            android:layout_marginBottom="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-
-        <!-- PHOTOGRAPHERS LIST -->
+            android:layout_marginBottom="8dp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvPhotographers"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/tvBookingsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="My bookings"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvBookings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp" />
 
     </LinearLayout>
 
