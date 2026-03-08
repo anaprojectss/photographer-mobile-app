@@ -591,4 +591,76 @@ public class FirebaseRest {
             }
         });
     }
+
+    public static void updateBooking(String bookingId,
+                                     String date,
+                                     String location,
+                                     String shootType,
+                                     String hours,
+                                     ResultCallback cb) {
+
+        String url = BASE_URL + "/bookings/" + bookingId + ".json";
+
+        org.json.JSONObject bodyJson = new org.json.JSONObject();
+        try {
+            bodyJson.put("date", date);
+            bodyJson.put("location", location);
+            bodyJson.put("shootType", shootType);
+            bodyJson.put("hours", hours);
+            bodyJson.put("status", "pending");
+        } catch (org.json.JSONException e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        okhttp3.RequestBody body = okhttp3.RequestBody.create(bodyJson.toString(), JSON);
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .patch(body)
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
+
+    public static void deleteBooking(String bookingId, ResultCallback cb) {
+        String url = BASE_URL + "/bookings/" + bookingId + ".json";
+
+        okhttp3.Request request = new okhttp3.Request.Builder()
+                .url(url)
+                .delete()
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, java.io.IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, okhttp3.Response response) throws java.io.IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
 }

@@ -171,6 +171,7 @@ public class ClientHomeActivity extends AppCompatActivity {
 
         BookingAdapter bookingAdapter = new BookingAdapter(booking -> {
             Intent i = new Intent(ClientHomeActivity.this, BookingDetailActivity.class);
+            i.putExtra(BookingDetailActivity.EXTRA_BOOKING_ID, booking.id);
             i.putExtra(BookingDetailActivity.EXTRA_PHOTOGRAPHER_ID, booking.photographerId);
             i.putExtra(BookingDetailActivity.EXTRA_DATE, booking.date);
             i.putExtra(BookingDetailActivity.EXTRA_LOCATION, booking.location);
