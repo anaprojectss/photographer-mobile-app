@@ -663,4 +663,103 @@ public class FirebaseRest {
             }
         });
     }
+
+    public static void getBookingsForPhotographer(String photographerId, BookingListCallback cb) {
+        okhttp3.HttpUrl url = okhttp3.HttpUrl.parse(BASE_URL + "/bookings.json")
+                .newBuilder()
+                .addQueryParameter("orderBy", "\"photographerId\"")
+                .addQueryParameter("equalTo", "\"" + photographerId + "\"")
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+
+                try {
+                    java.util.ArrayList<Booking> list = new java.util.ArrayList<>();
+
+                    if (resp.equals("null")) {
+                        cb.onSuccess(list);
+                        return;
+                    }
+
+                    org.json.JSONObject data = new org.json.JSONObject(resp);
+                    java.util.Iterator<String> keys = data.keys();
+
+                    while (keys.hasNext()) {
+                        String id = keys.next();
+                        org.json.JSONObject b = data.getJSONObject(id);
+
+                        list.add(new Booking(
+                                id,
+                                b.optString("clientId"),
+                                b.optString("photographerId"),
+                                b.optString("date"),
+                                b.optString("location"),
+                                b.optString("shootType"),
+                                b.optString("hours"),
+                                b.optString("status")
+                        ));
+                    }
+
+                    cb.onSuccess(list);
+
+                } catch (Exception e) {
+                    cb.onError("Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    public static void updateBookingStatus(String bookingId, String newStatus, ResultCallback cb) {
+        String url = BASE_URL + "/bookings/" + bookingId + ".json";
+
+        org.json.JSONObject bodyJson = new org.json.JSONObject();
+        try {
+            bodyJson.put("status", newStatus);
+        } catch (org.json.JSONException e) {
+            cb.onError("JSON error: " + e.getMessage());
+            return;
+        }
+
+        RequestBody body = RequestBody.create(bodyJson.toString(), JSON);
+
+        Request request = new Request.Builder()
+                .url(url)
+                .patch(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                cb.onError("Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resp = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    cb.onError("HTTP " + response.code() + ": " + resp);
+                    return;
+                }
+                cb.onSuccess(resp);
+            }
+        });
+    }
 }

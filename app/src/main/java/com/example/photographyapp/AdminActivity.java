@@ -25,6 +25,7 @@ public class AdminActivity extends AppCompatActivity {
     private androidx.recyclerview.widget.RecyclerView rvPhotos;
     private PhotoAdapter photoAdapter;
     private String userId;
+    private AdminBookingAdapter adminBookingAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +87,7 @@ public class AdminActivity extends AppCompatActivity {
                     showPhotosView();
                     fabAddPhoto.setVisibility(View.VISIBLE);
                 } else { // Bookings
-                    showPlaceholder("Bookings will be shown here (list).");
+                    showBookingsView();
                     fabAddPhoto.setVisibility(View.GONE);
                 }
             }
@@ -300,6 +301,83 @@ public class AdminActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (photoAdapter != null) loadPhotos();
+    }
+
+    private void showBookingsView() {
+        android.widget.FrameLayout container = findViewById(R.id.contentContainer);
+        container.removeAllViews();
+
+        View v = getLayoutInflater().inflate(R.layout.view_admin_bookings, container, false);
+        container.addView(v);
+
+        androidx.recyclerview.widget.RecyclerView rvBookings = v.findViewById(R.id.rvAdminBookings);
+        rvBookings.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
+
+        if (adminBookingAdapter == null) {
+            adminBookingAdapter = new AdminBookingAdapter(
+                    booking -> {
+                        FirebaseRest.updateBookingStatus(booking.id, "accepted", new FirebaseRest.ResultCallback() {
+                            @Override
+                            public void onSuccess(String responseBody) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(AdminActivity.this, "Booking accepted", Toast.LENGTH_SHORT).show();
+                                    loadAdminBookings();
+                                });
+                            }
+
+                            @Override
+                            public void onError(String message) {
+                                runOnUiThread(() ->
+                                        Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show()
+                                );
+                            }
+                        });
+                    },
+                    booking -> {
+                        FirebaseRest.updateBookingStatus(booking.id, "rejected", new FirebaseRest.ResultCallback() {
+                            @Override
+                            public void onSuccess(String responseBody) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(AdminActivity.this, "Booking rejected", Toast.LENGTH_SHORT).show();
+                                    loadAdminBookings();
+                                });
+                            }
+
+                            @Override
+                            public void onError(String message) {
+                                runOnUiThread(() ->
+                                        Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show()
+                                );
+                            }
+                        });
+                    }
+            );
+        }
+
+        rvBookings.setAdapter(adminBookingAdapter);
+        loadAdminBookings();
+    }
+
+    private void loadAdminBookings() {
+        if (userId == null) return;
+
+        FirebaseRest.getBookingsForPhotographer(userId, new FirebaseRest.BookingListCallback() {
+            @Override
+            public void onSuccess(java.util.List<Booking> bookings) {
+                runOnUiThread(() -> {
+                    if (adminBookingAdapter != null) {
+                        adminBookingAdapter.setItems(bookings);
+                    }
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                runOnUiThread(() ->
+                        Toast.makeText(AdminActivity.this, message, Toast.LENGTH_LONG).show()
+                );
+            }
+        });
     }
 
 
