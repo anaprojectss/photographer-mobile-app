@@ -19,6 +19,7 @@ import java.util.List;
 public class ClientHomeActivity extends AppCompatActivity {
 
     private String userId;
+    private BookingAdapter bookingAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -169,7 +170,7 @@ public class ClientHomeActivity extends AppCompatActivity {
         RecyclerView rvBookings = findViewById(R.id.rvBookings);
         rvBookings.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(this));
 
-        BookingAdapter bookingAdapter = new BookingAdapter(booking -> {
+        bookingAdapter = new BookingAdapter(booking -> {
             Intent i = new Intent(ClientHomeActivity.this, BookingDetailActivity.class);
             i.putExtra(BookingDetailActivity.EXTRA_BOOKING_ID, booking.id);
             i.putExtra(BookingDetailActivity.EXTRA_PHOTOGRAPHER_ID, booking.photographerId);
@@ -181,6 +182,8 @@ public class ClientHomeActivity extends AppCompatActivity {
             startActivity(i);
         });
         rvBookings.setAdapter(bookingAdapter);
+
+        loadBookings();
 
         if (userId != null) {
             FirebaseRest.getBookingsForClient(userId, new FirebaseRest.BookingListCallback() {
@@ -196,6 +199,32 @@ public class ClientHomeActivity extends AppCompatActivity {
                     );
                 }
             });
+        }
+    }
+
+    private void loadBookings() {
+        if (userId != null) {
+            FirebaseRest.getBookingsForClient(userId, new FirebaseRest.BookingListCallback() {
+                @Override
+                public void onSuccess(java.util.List<Booking> bookings) {
+                    runOnUiThread(() -> bookingAdapter.setItems(bookings));
+                }
+
+                @Override
+                public void onError(String message) {
+                    runOnUiThread(() ->
+                            Toast.makeText(ClientHomeActivity.this, message, Toast.LENGTH_LONG).show()
+                    );
+                }
+            });
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (bookingAdapter != null) {
+            loadBookings();
         }
     }
 }
